@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klaim Voucher</title>
+    <link href="{{ asset('fe/assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('fe/assets/css/main.css') }}" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -115,11 +118,10 @@
     </style>
 </head>
 
-<header>
-    @include('fe.navbar')
-</header>
-
 <body>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <nav>@include('fe.navbar')</nav>
+    </header>
     <div class="container">
         <h1>Voucher Tersedia</h1>
         <br>
@@ -171,31 +173,52 @@
                 e.preventDefault();
 
                 fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            _token: this.querySelector('input[name="_token"]').value
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            window.location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mengklaim voucher');
+                    });
+            });
+        });
+
+        function claimVoucher(id) {
+            fetch(`/diskon/claim/${id}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        _token: this.querySelector('input[name="_token"]').value
-                    })
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
                 })
                 .then(response => response.json())
                 .then(data => {
+                    alert(data.message);
                     if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
-                    } else {
-                        alert(data.message);
+                        location.reload();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Terjadi kesalahan saat mengklaim voucher');
                 });
-            });
-        });
+        }
     </script>
 </body>
 

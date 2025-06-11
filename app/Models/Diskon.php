@@ -11,17 +11,22 @@ class Diskon extends Model
 
     protected $table = 'diskons';
     protected $fillable = [
-        'nama_promo',
         'kode',
+        'nama_promo',
+        'jenis_diskon',
+        'nilai_diskon',
+        'minimal_transaksi',
         'detail_promo',
         'tanggal_mulai',
         'tanggal_berakhir',
-        'minimal_transaksi',
-        'jenis_diskon',
-        'nilai_diskon',
-        'maksimal_diskon',
         'kuota',
-        'digunakan'
+        'digunakan',
+        'is_active'
+    ];
+
+    protected $dates = [
+        'tanggal_mulai',
+        'tanggal_berakhir'
     ];
 
     public function reservasis()

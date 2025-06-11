@@ -21,6 +21,10 @@
     <!-- Adding CSS MetisMenu -->
     <link href="https://cdn.jsdelivr.net/npm/metismenu/dist/metisMenu.min.css" rel="stylesheet">
 
+    <!-- SweetAlert2 CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <!-- Additional CSS -->
     <style>
         /* Preloader styling */
@@ -138,6 +142,17 @@
             document.querySelector('.footer').classList.toggle('active');
         });
     </script>
+
+    @if(session('success'))
+    <script>
+        Swal.fire({
+            title: 'Sukses!',
+            text: "{{ session('success') }}",
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    </script>
+    @endif
 
 </body>
 

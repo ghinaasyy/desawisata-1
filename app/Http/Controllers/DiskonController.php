@@ -19,9 +19,7 @@ class DiskonController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('fe.voucher', [
-            'diskons' => $diskons
-        ]);
+        return view('fe.diskon', compact('diskons'));
     }
 
     public function claim(Request $request, $id)

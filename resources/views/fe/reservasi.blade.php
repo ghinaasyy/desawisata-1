@@ -211,7 +211,7 @@
                 <div class="mb-4">
                   <label for="file_bukti_tf" class="form-label">Bukti Transfer</label>
                   <input type="file" name="file_bukti_tf" id="file_bukti_tf" class="form-control" required>
-                  <div class="form-text">Upload bukti transfer pembayaran (format: JPG, PNG, PDF, maks 2MB)</div>
+                  <div class="form-text">Upload bukti transfer pembayaran (format: JPG, PNG, PDF, maks 5MB)</div>
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">

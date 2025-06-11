@@ -20,13 +20,14 @@ class KonfirmasiReservasiController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:dbayar,selesa,canceled'
+            'status' => 'required|in:dibayar,selesa,canceled'
         ]);
 
         $reservasi = Reservasi::findOrFail($id);
         $reservasi->status_reservasi_wisata = $request->status;
         $reservasi->save();
 
-        return redirect()->route('konfirmasireservasi.index')->with('success', 'Status reservasi berhasil diperbarui.');
+        return redirect()->route('konfirmasireservasi.index')
+            ->with('success', 'Status reservasi berhasil diperbarui');
     }
 }

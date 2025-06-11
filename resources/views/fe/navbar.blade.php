@@ -106,6 +106,26 @@ use Illuminate\Support\Facades\Auth;
       font-size: 12px;
       color: #666;
     }
+
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      padding: 15px 0;
+    }
+
+    .navbar-brand {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .nav-link {
+      color: #34495e !important;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: #7795b4 !important;
+    }
   </style>
 </head>
 
