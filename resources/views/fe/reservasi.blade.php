@@ -1,8 +1,13 @@
+@php
+use Illuminate\Support\Str;
+@endphp
+
 @extends('fe.master')
 
-@section('title', 'Reservasi')
+@section('title', 'Desa Arborek Papua')
 
-@push('styles')
+@section('content')
+
 <style>
     .form-section {
         background: #ffffff;
