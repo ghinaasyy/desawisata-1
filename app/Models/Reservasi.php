@@ -17,11 +17,18 @@ class Reservasi extends Model
         'tgl_reservasi_wisata',
         'harga',
         'jumlah_peserta',
-        'nilai_diskon',
+        'diskon', // decimal(10,0) - sebagai flag
+        'nilai_diskon', // float(10,2) - nilai nominal diskon
         'total_bayar',
         'file_bukti_tf',
-        'status_reservasi_wisata',
-        'diskon_id'
+        'status_reservasi_wisata'
+    ];
+
+    // Casting tipe data
+    protected $casts = [
+        'tgl_reservasi_wisata' => 'datetime',
+        'diskon' => 'decimal:0',
+        'nilai_diskon' => 'float',
     ];
 
     public function pelanggan()
@@ -34,8 +41,4 @@ class Reservasi extends Model
         return $this->belongsTo(PaketWisata::class, 'id_paket');
     }
 
-    public function diskon()
-    {
-        return $this->belongsTo(Diskon::class, 'diskon_id');
-    }
 }

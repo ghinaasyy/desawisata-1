@@ -259,12 +259,16 @@
           <p class="mb-0">Untuk pertanyaan tentang invoice ini, silakan hubungi kami di info@desaarborekpapua.com</p>
         </div>
 
+        <!-- Ganti bagian tombol action di bagian bawah -->
         <div class="invoice-action no-print">
           <button onclick="window.print()" class="btn btn-print">
             <i class="bi bi-printer me-2"></i>Cetak Invoice
           </button>
-          <a href="{{ route('reservasi.show_riwayat', $reservasi->id) }}" class="btn btn-outline-primary ms-2">
-            <i class="bi bi-arrow-left me-2"></i>Kembali
+          <a href="{{ route('reservasi.download-invoice', $reservasi->id) }}" class="btn btn-primary ms-2">
+            <i class="bi bi-download me-2"></i>Download PDF
+          </a>
+          <a href="{{ route('reservasi.riwayat') }}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left me-2"></i>Kembali ke Riwayat
           </a>
         </div>
       </div>

@@ -5,113 +5,120 @@ namespace App\Http\Controllers;
 use App\Models\Reservasi;
 use App\Models\PaketWisata;
 use App\Models\Pelanggan;
-use App\Models\Diskon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Voucher;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReservasiController extends Controller
 {
     /**
-     * Menampilkan halaman reservasi frontend
+     * Halaman form reservasi frontend
      */
     public function index()
     {
-        $pakets = PaketWisata::all();
-        return view('fe.reservasi', compact('pakets'));
+        // Sesuaikan dengan blade: fe/reservasi.blade.php pakai $paket
+        $paket = PaketWisata::all();
+        return view('fe.reservasi', compact('paket'));
     }
 
     /**
-     * Menampilkan form reservasi
+     * Form reservasi (tidak digunakan frontend biasa)
      */
     public function create()
     {
-        // Pastikan user sudah login
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu');
         }
 
-        $pakets = PaketWisata::all();
-        return view('reservasi.create', compact('pakets'));
+        $paket = PaketWisata::all();
+        return view('reservasi.create', compact('paket'));
     }
 
     /**
-     * Menyimpan data reservasi baru
+     * Simpan data reservasi
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'id_paket' => 'required|exists:paket_wisatas,id',
-            'tgl_reservasi_wisata' => 'required|date|after_or_equal:today',
-            'jumlah_peserta' => 'required|integer|min:1',
-            'file_bukti_tf' => 'required|file|max:5120',
-            'voucher_code' => 'nullable|string',
+        $request->validate([
+            'paket_id' => 'required|exists:paket_wisatas,id',
+            'tanggal' => 'required|date|after_or_equal:today',
+            'jumlah_orang' => 'required|integer|min:1',
         ]);
 
         try {
-            $paket = PaketWisata::findOrFail($request->id_paket);
-            $harga = $paket->harga_per_pack;
-            $subtotal = $harga * $request->jumlah_peserta;
-            $nilai_diskon = 0;
-            $diskon_id = null;
+            // Ambil paket
+            $paket = PaketWisata::findOrFail($request->paket_id);
 
-            if ($request->voucher_code) {
-                $voucher = Voucher::where('kode', $request->voucher_code)->first();
-                if ($voucher) {
-                    $nilai_diskon = $subtotal * ($voucher->nilai_diskon / 100);
-                    $diskon_id = $voucher->id;
-                }
-            }
+            $harga = $paket->harga_per_pack;
+            $subtotal = $harga * $request->jumlah_orang;
+
+            // Tanpa voucher dulu
+            $nilai_diskon = 0;
+            $diskon_flag = 0;
 
             $total_bayar = $subtotal - $nilai_diskon;
 
-            $filePath = $request->file('file_bukti_tf')->store('public/bukti_transfer');
-            $filePath = str_replace('public/', '', $filePath);
-
+            // Buat reservasi
             $reservasi = Reservasi::create([
                 'id_pelanggan' => Auth::user()->pelanggan->id,
-                'id_paket' => $request->id_paket,
-                'tgl_reservasi_wisata' => $request->tgl_reservasi_wisata,
+                'id_paket' => $request->paket_id,
+                'tgl_reservasi_wisata' => $request->tanggal,
                 'harga' => $harga,
-                'jumlah_peserta' => $request->jumlah_peserta,
-                'diskon' => $nilai_diskon > 0 ? 1 : 0,
+                'jumlah_peserta' => $request->jumlah_orang,
+                'diskon' => $diskon_flag,
                 'nilai_diskon' => $nilai_diskon,
                 'total_bayar' => $total_bayar,
-                'file_bukti_tf' => $filePath,
-                'status_reservasi_wisata' => 'pesan', // harus salah satu dari enum!
-                'diskon_id' => $diskon_id,
+                'file_bukti_tf' => null, // frontend tidak wajib upload dulu
+                'status_reservasi_wisata' => 'pesan'
             ]);
 
-            return redirect()->route('reservasi.riwayat')
+            return redirect()
+                ->route('fe.reservasi-sukses', $reservasi->id)
                 ->with('success', 'Reservasi berhasil dibuat!');
         } catch (\Exception $e) {
-            return back()->withInput()
-                ->with('error', 'Gagal membuat reservasi: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal membuat reservasi: ' . $e->getMessage());
         }
     }
 
     /**
-     * Menampilkan detail reservasi
+     * Halaman sukses setelah reservasi
+     */
+    public function success($id)
+    {
+        $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])
+            ->findOrFail($id);
+
+        if (
+            Auth::user()->role !== 'admin' &&
+            Auth::user()->pelanggan->id !== $reservasi->id_pelanggan
+        ) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('fe.reservasi-sukses', compact('reservasi'));
+    }
+
+    /**
+     * Detail reservasi
      */
     public function show($id)
     {
         $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])
             ->findOrFail($id);
 
-        // Pastikan hanya pemilik atau admin yang bisa melihat
         if (
             Auth::user()->role !== 'admin' &&
             Auth::user()->pelanggan->id !== $reservasi->id_pelanggan
         ) {
-            abort(403, 'Unauthorized action.');
+            abort(403, 'Unauthorized');
         }
 
-        return view('reservasi.show', compact('reservasi'));
+        return view('fe.reservasi-show', compact('reservasi'));
     }
 
     /**
-     * Menampilkan riwayat reservasi user
+     * Riwayat reservasi user
      */
     public function riwayat()
     {
@@ -124,40 +131,52 @@ class ReservasiController extends Controller
     }
 
     /**
-     * Menampilkan riwayat reservasi untuk satu reservasi spesifik
-     */
-    public function showRiwayat($id)
-    {
-        $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])
-            ->findOrFail($id);
-
-        // Pastikan hanya pemilik atau admin yang bisa melihat
-        if (
-            Auth::user()->role !== 'admin' &&
-            Auth::user()->pelanggan->id !== $reservasi->id_pelanggan
-        ) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        return view('reservasi.show_riwayat', compact('reservasi'));
-    }
-
-    /**
-     * Update status reservasi (untuk admin)
+     * Update status reservasi (admin)
      */
     public function updateStatus(Request $request, $id)
     {
         if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized action.');
+            abort(403, 'Unauthorized');
         }
 
         $request->validate([
-            'status_reservasi_wisata' => 'required|in:pesan,dibayar,selsesai',
+            'status_reservasi_wisata' => 'required|in:pesan,dibayar,selesai',
         ]);
 
-        $reservasi = Reservasi::findOrFail($id);
-        $reservasi->update(['status_reservasi_wisata' => $request->status_reservasi_wisata]);
+        Reservasi::findOrFail($id)->update([
+            'status_reservasi_wisata' => $request->status_reservasi_wisata
+        ]);
 
-        return back()->with('success', 'Status reservasi berhasil diupdate');
+        return back()->with('success', 'Status berhasil diupdate');
+    }
+
+    /**
+     * Halaman invoice (preview)
+     */
+    public function invoice($id)
+    {
+        $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])->findOrFail($id);
+        return view('reservasi.invoice', compact('reservasi'));
+    }
+
+    /**
+     * Download invoice PDF
+     */
+    public function downloadInvoice($id)
+    {
+        $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('reservasi.invoice', compact('reservasi'));
+        return $pdf->download('invoice-' . $reservasi->id . '.pdf');
+    }
+
+    /**
+     * Download invoice tanpa auth
+     */
+    public function downloadInvoicePublic($id)
+    {
+        $reservasi = Reservasi::with(['paketWisata', 'pelanggan'])->findOrFail($id);
+        $pdf = Pdf::loadView('reservasi.invoice', compact('reservasi'));
+        return $pdf->stream('invoice-' . $reservasi->id . '.pdf');
     }
 }

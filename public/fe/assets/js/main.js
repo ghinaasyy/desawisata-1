@@ -206,4 +206,18 @@
   window.addEventListener('load', navmenuScrollspy);
   document.addEventListener('scroll', navmenuScrollspy);
 
+  /**
+   * Thumbnail click handler (delegated)
+   * - thumbnails should have attributes: data-src (image url) and data-target (selector of main image)
+   */
+  document.addEventListener('click', function(e) {
+    const thumb = e.target.closest('.img-thumbnail');
+    if (!thumb) return;
+    const src = thumb.dataset.src;
+    const targetSel = thumb.dataset.target;
+    if (!src || !targetSel) return;
+    const main = document.querySelector(targetSel);
+    if (main) main.src = src;
+  });
+
 })();

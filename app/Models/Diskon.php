@@ -10,32 +10,44 @@ class Diskon extends Model
     use HasFactory;
 
     protected $table = 'diskons';
+
     protected $fillable = [
-        'kode',
         'nama_promo',
-        'jenis_diskon',
-        'nilai_diskon',
-        'minimal_transaksi',
+        'kode',
         'detail_promo',
         'tanggal_mulai',
         'tanggal_berakhir',
+        'minimal_transaksi',
+        'jenis_diskon',
+        'nilai_diskon',
+        'maksimal_diskon',
         'kuota',
-        'digunakan',
-        'is_active'
+        'digunakan'
     ];
 
-    protected $dates = [
-        'tanggal_mulai',
-        'tanggal_berakhir'
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_berakhir' => 'date',
+        'nilai_diskon' => 'decimal:2',
+        'minimal_transaksi' => 'integer',
+        'kuota' => 'integer',
+        'digunakan' => 'integer'
     ];
 
+    // Relasi ke reservasi
     public function reservasis()
     {
-        return $this->hasMany(Reservasi::class);
+        return $this->hasMany(Reservasi::class, 'diskon_id');
     }
 
-    public function isValid()
+    // Scope untuk voucher aktif
+    public function scopeAktif($query)
     {
-        return $this->tanggal_berakhir >= now() && $this->digunakan < $this->kuota;
+        return $query->where('tanggal_mulai', '<=', now())
+                    ->where('tanggal_berakhir', '>=', now())
+                    ->where(function($q) {
+                        $q->whereNull('kuota')
+                          ->orWhereRaw('digunakan < kuota');
+                    });
     }
 }
