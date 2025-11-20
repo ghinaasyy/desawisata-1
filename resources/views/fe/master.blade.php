@@ -16,6 +16,8 @@
   <!-- Template Main CSS -->
   <!-- NOTE: stylesheet file in public is named `main.css` not `style.css` -->
   <link href="{{ asset('fe/assets/css/main.css') }}" rel="stylesheet">
+  <!-- Page-specific styles -->
+  @stack('styles')
 </head>
 
 <body>
@@ -39,6 +41,7 @@
 
   <!-- Template Main JS -->
   <script src="{{ asset('fe/assets/js/main.js') }}"></script>
+  @stack('scripts')
 </body>
 
 </html>

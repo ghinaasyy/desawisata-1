@@ -56,6 +56,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [App\Http\Controllers\ReservasiController::class, 'index'])->name('reservasi.index');
         Route::post('/', [App\Http\Controllers\ReservasiController::class, 'store'])->name('reservasi.store');
         Route::get('riwayat', [App\Http\Controllers\ReservasiController::class, 'riwayat'])->name('reservasi.riwayat');
+        // detail view for a reservation (needed by redirects)
+        Route::get('{id}', [App\Http\Controllers\ReservasiController::class, 'show'])->name('reservasi.show');
         
     // Route untuk detail dan invoice
     Route::prefix('{id}')->group(function () {
