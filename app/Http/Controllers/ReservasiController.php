@@ -135,19 +135,37 @@ class ReservasiController extends Controller
     public function invoice($id)
     {
         $reservasi = Reservasi::with(['paketWisata','pelanggan'])->findOrFail($id);
-        return view('reservasi.invoice', compact('reservasi'));
+        return view('fe.invoice', compact('reservasi'));
     }
 
     // Download invoice (authenticated) - try PDF if available, else render view
     public function downloadInvoice($id)
     {
         $reservasi = Reservasi::with(['paketWisata','pelanggan'])->findOrFail($id);
-        // If DomPDF is available, use it; otherwise show view
+        // If Barryvdh/DomPDF facade is available, use it (recommended)
         if (class_exists('\\Barryvdh\\DomPDF\\Facade\\Pdf')) {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reservasi.invoice', compact('reservasi'));
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('fe.invoice-pdf', compact('reservasi'))
+                ->setPaper('a4', 'portrait');
             return $pdf->download('invoice-' . $reservasi->id . '.pdf');
         }
-        return view('reservasi.invoice', compact('reservasi'));
+
+        // Try using the underlying Dompdf library if present
+        if (class_exists('\\Dompdf\\Dompdf')) {
+            $html = view('fe.invoice-pdf', compact('reservasi'))->render();
+            $options = new \Dompdf\Options();
+            $options->set('isRemoteEnabled', true);
+            $dompdf = new \Dompdf\Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            return response($dompdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="invoice-' . $reservasi->id . '.pdf"'
+            ]);
+        }
+
+        // Fallback: render the HTML invoice view if PDF libs are not installed
+        return view('fe.invoice', compact('reservasi'));
     }
 
     // Public invoice download/stream (no auth)
@@ -155,10 +173,25 @@ class ReservasiController extends Controller
     {
         $reservasi = Reservasi::with(['paketWisata','pelanggan'])->findOrFail($id);
         if (class_exists('\\Barryvdh\\DomPDF\\Facade\\Pdf')) {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reservasi.invoice', compact('reservasi'));
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('fe.invoice-pdf', compact('reservasi'))
+                ->setPaper('a4', 'portrait');
             return $pdf->stream('invoice-' . $reservasi->id . '.pdf');
         }
-        return view('reservasi.invoice', compact('reservasi'));
+
+        if (class_exists('\\Dompdf\\Dompdf')) {
+            $html = view('fe.invoice-pdf', compact('reservasi'))->render();
+            $options = new \Dompdf\Options();
+            $options->set('isRemoteEnabled', true);
+            $dompdf = new \Dompdf\Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            return response($dompdf->stream(), 200, [
+                'Content-Type' => 'application/pdf'
+            ]);
+        }
+
+        return view('fe.invoice', compact('reservasi'));
     }
 
     // Show specific reservation from public riwayat route

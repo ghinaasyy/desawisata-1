@@ -50,6 +50,66 @@
                                 <th width="18%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    function createBadge(status) {
+        switch(status) {
+            case 'pesan': return '<span class="badge badge-warning">Menunggu</span>';
+            case 'dibayar': return '<span class="badge badge-primary">Dibayar</span>';
+            case 'selesai': return '<span class="badge badge-success">Selesai</span>';
+            default: return '<span class="badge badge-secondary">-</span>';
+        }
+    }
+
+    document.querySelectorAll('.status-select').forEach(function(select) {
+        select.addEventListener('change', function(e) {
+            const url = this.dataset.url;
+            const newStatus = this.value;
+            if (!url || newStatus === '') return;
+
+            const previous = this.getAttribute('data-prev') || '';
+
+            // optimistic UI: disable select to prevent double submissions
+            this.disabled = true;
+
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.success) {
+                    // update badge in same row
+                    const row = select.closest('tr');
+                    const badgeCell = row.querySelector('.status-badge-cell');
+                    if (badgeCell) badgeCell.innerHTML = createBadge(newStatus);
+                    // update data-prev
+                    select.setAttribute('data-prev', newStatus);
+                } else {
+                    // revert selection
+                    select.value = previous;
+                    alert((data && data.message) ? data.message : 'Gagal memperbarui status');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                select.value = previous;
+                alert('Terjadi kesalahan jaringan');
+            })
+            .finally(() => select.disabled = false);
+        });
+    });
+});
+</script>
+@endpush
                         <tbody>
                             @forelse ($konfirmasiReservasis as $reservasi)
                                 <tr>
@@ -67,7 +127,7 @@
                                             <span class="badge badge-danger">-</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center status-badge-cell">
                                         @switch($reservasi->status_reservasi_wisata)
                                             @case('pesan')
                                                 <span class="badge badge-warning">Menunggu</span>
@@ -75,11 +135,11 @@
                                             @case('dibayar')
                                                 <span class="badge badge-primary">Dibayar</span>
                                                 @break
-                                            @case('selesa')
+                                            @case('selesai')
                                                 <span class="badge badge-success">Selesai</span>
                                                 @break
                                             @default
-                                                <span class="badge badge-danger">Dibatalkan</span>
+                                                <span class="badge badge-secondary">-</span>
                                         @endswitch
                                     </td>
                                     <td class="text-center">
@@ -88,16 +148,12 @@
                                                 <i class="fa fa-info-circle"></i>
                                             </a>
                                             
-                                            <form action="{{ route('konfirmasireservasi.updateStatus', $reservasi->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
+                                                <select name="status" class="form-control form-control-sm status-select" data-url="{{ route('konfirmasireservasi.updateStatus', $reservasi->id) }}" data-prev="{{ $reservasi->status_reservasi_wisata }}">
                                                     <option value="">Pilih Status</option>
+                                                    <option value="pesan" {{ $reservasi->status_reservasi_wisata == 'pesan' ? 'selected' : '' }}>Menunggu</option>
                                                     <option value="dibayar" {{ $reservasi->status_reservasi_wisata == 'dibayar' ? 'selected' : '' }}>Dibayar</option>
-                                                    <option value="selesa" {{ $reservasi->status_reservasi_wisata == 'selesa' ? 'selected' : '' }}>Selesai</option>
-                                                    <option value="canceled" {{ $reservasi->status_reservasi_wisata == 'canceled' ? 'selected' : '' }}>Batal</option>
+                                                    <option value="selesai" {{ $reservasi->status_reservasi_wisata == 'selesai' ? 'selected' : '' }}>Selesai</option>
                                                 </select>
-                                            </form>
                                         </div>
                                     </td>
                                 </tr>

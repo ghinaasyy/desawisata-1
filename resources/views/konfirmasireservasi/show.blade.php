@@ -213,9 +213,13 @@
                 <div class="detail-row">
                   <div class="detail-label">Bukti Pembayaran</div>
                   <div class="detail-value">
-                    <a href="{{ Storage::url($reservasi->file_bukti_tf) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    @if($reservasi->file_bukti_tf)
+                    <a href="{{ request()->getSchemeAndHttpHost() . Storage::url($reservasi->file_bukti_tf) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                       <i class="bi bi-file-earmark-image me-1"></i>Lihat Bukti Transfer
                     </a>
+                    @else
+                      <span class="badge bg-danger">-</span>
+                    @endif
                   </div>
                 </div>
               </div>

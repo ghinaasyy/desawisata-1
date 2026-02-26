@@ -1,21 +1,11 @@
-@extends('fe.master')
+<!-- legacy duplicate invoice view kept for compatibility -->
 
-@section('content')
-<div class="container py-5 mt-5" style="padding-top:90px;">
-    <style>
-        /* Minimal modern invoice table */
-        .invoice-card { background: #fff; border-radius: 8px; }
-        .invoice-table td { padding: .65rem .75rem; vertical-align: middle; }
-        .invoice-table tr + tr td { border-top: 1px solid #e9ecef; }
-        .invoice-table .label { color: #6c757d; }
-        .invoice-table .value { text-align: right; font-weight:600; color:#111; }
-        @media (max-width:576px) {
-            .invoice-table .label { font-size: 13px; }
-            .invoice-table .value { font-size: 14px; }
-        }
-    </style>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+@includeIf('fe.invoice')
+
+{{-- This file is a passthrough to resources/views/fe/invoice.blade.php.
+     Keeping a small include avoids 404s from any stale references while
+     centralizing the invoice template under `fe`. You can safely delete
+     this file later once callers are confirmed to use the `fe` view. --}} 
             <div class="card p-4">
                 <h3>Invoice Reservasi Desa Wisata</h3>
                 <p><strong>Pelanggan:</strong> {{ optional($reservasi->pelanggan)->nama_lengkap ?? '-' }}</p>
@@ -46,7 +36,7 @@
 
                 <div class="mt-3 d-flex justify-content-between">
                     <a href="{{ url('/reservasi/riwayat') }}" class="btn btn-outline-secondary">Tutup</a>
-                    <a href="{{ url('/reservasi/download-invoice/' . $reservasi->id) }}" class="btn btn-primary">Download PDF</a>
+                    <a href="{{ route('reservasi.download-invoice', $reservasi->id) }}" class="btn btn-primary">Download PDF</a>
                 </div>
             </div>
         </div>

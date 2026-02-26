@@ -71,7 +71,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Konfirmasi Reservasi khusus bendahara
-    Route::middleware(['auth', 'role:bendahara'])->group(function () {
+        Route::middleware(['auth', 'userAkses:bendahara'])->group(function () {
         Route::get('/konfirmasireservasi', [App\Http\Controllers\KonfirmasiReservasiController::class, 'index'])->name('konfirmasireservasi.index');
         Route::get('/konfirmasireservasi/{id}', [App\Http\Controllers\KonfirmasiReservasiController::class, 'show'])->name('konfirmasireservasi.show');
         Route::patch('/konfirmasireservasi/{id}/status', [App\Http\Controllers\KonfirmasiReservasiController::class, 'updateStatus'])->name('konfirmasireservasi.updateStatus');
