@@ -315,54 +315,26 @@ use Illuminate\Support\Str;
     <div class="container">
         <div class="row gy-4">
 
-            <div class="col-lg-6">
+            <div class="col-lg-6 d-flex align-items-center justify-content-center">
 
-                <div class="info-item d-flex flex-column align-items-center mb-3">
-                    <i class="bi bi-geo-alt"></i>
-                    <h3>Alamat</h3>
-                    <p>Jalan Dokter Semeru, Bogor Tengah, Jawa Barat</p>
+                <div class="text-center">
+
+                    <h3 class="mb-3">Hubungi Kami via WhatsApp</h3>
+                    <p class="mb-4">
+                        Ingin reservasi atau tanya-tanya tentang wisata di Desa Arborek?
+                        Klik tombol di bawah untuk langsung chat dengan kami.
+                    </p>
+
+                    <a href="https://wa.me/6281295036362"
+                        target="_blank"
+                        class="btn btn-success px-4 py-2"
+                        style="font-size: 16px; border-radius: 30px;">
+
+                        <i class="bi bi-whatsapp"></i> Chat via WhatsApp
+                    </a>
+
                 </div>
 
-                <div class="info-item d-flex flex-column align-items-center mb-3">
-                    <i class="bi bi-telephone"></i>
-                    <h3>Hubungi</h3>
-                    <p>(0251) 8350544</p>
-                </div>
-
-                <div class="info-item d-flex flex-column align-items-center">
-                    <i class="bi bi-envelope"></i>
-                    <h3>Email</h3>
-                    <p>Ghina@gmail.com</p>
-                </div>
-
-            </div>
-
-            <div class="col-lg-6">
-                <form action="#" method="post" class="php-email-form">
-                    <div class="row gy-4">
-
-                        <div class="col-md-6">
-                            <input type="text" class="form-control" placeholder="Your Name" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <input type="email" class="form-control" placeholder="Your Email" required>
-                        </div>
-
-                        <div class="col-md-12">
-                            <input type="text" class="form-control" placeholder="Subject" required>
-                        </div>
-
-                        <div class="col-md-12">
-                            <textarea class="form-control" rows="4" placeholder="Message" required></textarea>
-                        </div>
-
-                        <div class="col-md-12 text-center">
-                            <button type="submit">Send Message</button>
-                        </div>
-
-                    </div>
-                </form>
             </div>
 
         </div>
