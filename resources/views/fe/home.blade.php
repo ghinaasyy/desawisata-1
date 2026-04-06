@@ -173,7 +173,8 @@ use Illuminate\Support\Str;
             <div class="col-xl-4 col-md-6">
                 <div class="service-item">
                     <div class="img">
-                        <img src="{{ $foto ? asset('storage/' . $foto) : asset('fe/assets/img/default-penginapan.jpg') }}"
+                        <img
+                            src="{{ $foto ? (Str::startsWith($foto, 'http') ? $foto : asset('storage/' . $foto)) : asset('fe/assets/img/default-penginapan.jpg') }}"
                             class="img-fluid">
                     </div>
 

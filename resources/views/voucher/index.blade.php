@@ -47,10 +47,10 @@
                                         <th>Nilai Diskon</th>
                                         <th>Tipe</th>
                                         <th>Min. Transaksi</th>
-                                        <th>Tanggal Mulai</th>
-                                        <th>Tanggal Berakhir</th>
+                                        <th>Tanggal</th>
                                         <th>Kuota</th>
-                                        <th>Digunakan</th>
+                                        <th>Dipakai</th>
+                                        <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -59,13 +59,35 @@
                                     <tr>
                                         <td>{{ $voucher->kode }}</td>
                                         <td>{{ $voucher->nama_promo }}</td>
-                                        <td>{{ $voucher->nilai_diskon }}</td>
+
+                                        <td>
+                                            @if($voucher->jenis_diskon == 'persentase')
+                                                {{ $voucher->nilai_diskon }}%
+                                            @else
+                                                Rp {{ number_format($voucher->nilai_diskon) }}
+                                            @endif
+                                        </td>
+
                                         <td>{{ ucfirst($voucher->jenis_diskon) }}</td>
-                                        <td>{{ number_format($voucher->minimal_transaksi) }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($voucher->tanggal_mulai)->format('d M Y') }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($voucher->tanggal_berakhir)->format('d M Y') }}</td>
+                                        <td>Rp {{ number_format($voucher->minimal_transaksi) }}</td>
+
+                                        <td>
+                                            {{ \Carbon\Carbon::parse($voucher->tanggal_mulai)->format('d M Y') }}
+                                            <br> -
+                                            {{ \Carbon\Carbon::parse($voucher->tanggal_berakhir)->format('d M Y') }}
+                                        </td>
+
                                         <td>{{ $voucher->kuota }}</td>
                                         <td>{{ $voucher->digunakan }}</td>
+
+                                        <td>
+                                            @if(now()->between($voucher->tanggal_mulai, $voucher->tanggal_berakhir))
+                                                <span class="badge badge-success">Aktif</span>
+                                            @else
+                                                <span class="badge badge-secondary">Tidak Aktif</span>
+                                            @endif
+                                        </td>
+
                                         <td>
                                             <a href="{{ route('voucher.edit', $voucher->id) }}" class="btn btn-sm btn-warning">
                                                 <i class="fas fa-edit"></i>
@@ -73,7 +95,7 @@
                                             <form action="{{ route('voucher.destroy', $voucher->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus?')">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus voucher ini?')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -83,6 +105,7 @@
                                 </tbody>
                             </table>
                         </div>
+
                     </div>
                 </div>
             </div>

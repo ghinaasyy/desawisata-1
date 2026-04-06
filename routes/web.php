@@ -38,8 +38,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('/diskon', App\Http\Controllers\DiskonController::class)->except(['index']);
     });
 
-    Route::prefix('owner')->middleware('userAkses:owner')->group(function () {
+    Route::prefix('owner')->group(function () {
         Route::get('/', [App\Http\Controllers\OwnerController::class, 'index'])->name('owner.index');
+
+        Route::get('/users', [App\Http\Controllers\OwnerController::class, 'users'])->name('owner.users');
+        Route::get('/keuangan', [App\Http\Controllers\OwnerController::class, 'keuangan'])->name('owner.keuangan');
+
+        Route::get('/export-pdf', [App\Http\Controllers\OwnerController::class, 'exportPdf'])->name('owner.export.pdf');
     });
 
     // Route umum untuk semua role
@@ -58,20 +63,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('riwayat', [App\Http\Controllers\ReservasiController::class, 'riwayat'])->name('reservasi.riwayat');
         // detail view for a reservation (needed by redirects)
         Route::get('{id}', [App\Http\Controllers\ReservasiController::class, 'show'])->name('reservasi.show');
-        
-    // Route untuk detail dan invoice
-    Route::prefix('{id}')->group(function () {
-        Route::get('success', [App\Http\Controllers\ReservasiController::class, 'success'])->name('reservasi.success');
-        Route::get('invoice', [App\Http\Controllers\ReservasiController::class, 'invoice'])->name('reservasi.invoice');
-        Route::get('download-invoice', [App\Http\Controllers\ReservasiController::class, 'downloadInvoice'])->name('reservasi.download-invoice');
-    });
 
-    // Route public untuk invoice (tanpa auth)
-    Route::get('invoice-public/{id}', [App\Http\Controllers\ReservasiController::class, 'downloadInvoicePublic'])->name('reservasi.invoice.public');
+        // Route untuk detail dan invoice
+        Route::prefix('{id}')->group(function () {
+            Route::get('success', [App\Http\Controllers\ReservasiController::class, 'success'])->name('reservasi.success');
+            Route::get('invoice', [App\Http\Controllers\ReservasiController::class, 'invoice'])->name('reservasi.invoice');
+            Route::get('download-invoice', [App\Http\Controllers\ReservasiController::class, 'downloadInvoice'])->name('reservasi.download-invoice');
+        });
+
+        // Route public untuk invoice (tanpa auth)
+        Route::get('invoice-public/{id}', [App\Http\Controllers\ReservasiController::class, 'downloadInvoicePublic'])->name('reservasi.invoice.public');
     });
 
     // Konfirmasi Reservasi khusus bendahara
-        Route::middleware(['auth', 'userAkses:bendahara'])->group(function () {
+    Route::middleware(['auth', 'userAkses:bendahara'])->group(function () {
         Route::get('/konfirmasireservasi', [App\Http\Controllers\KonfirmasiReservasiController::class, 'index'])->name('konfirmasireservasi.index');
         Route::get('/konfirmasireservasi/{id}', [App\Http\Controllers\KonfirmasiReservasiController::class, 'show'])->name('konfirmasireservasi.show');
         Route::patch('/konfirmasireservasi/{id}/status', [App\Http\Controllers\KonfirmasiReservasiController::class, 'updateStatus'])->name('konfirmasireservasi.updateStatus');
@@ -80,10 +85,6 @@ Route::middleware(['auth'])->group(function () {
     // Profile
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-
-    // Diskon untuk semua user (kecuali index yang sudah dihandle bendahara)
-    Route::get('/diskon', [App\Http\Controllers\DiskonController::class, 'index'])->name('diskon.index');
-    Route::post('/diskon/claim/{id}', [App\Http\Controllers\DiskonController::class, 'claim'])->name('diskon.claim');
 });
 
 // Route Frontend (tidak memerlukan auth)
@@ -91,3 +92,5 @@ Route::get('/reservasi', [App\Http\Controllers\ReservasiController::class, 'inde
 Route::get('/riwayat-reservasi/{id}', [App\Http\Controllers\ReservasiController::class, 'showRiwayat'])->name('fe.riwayatreservasi');
 Route::get('/invoice/{id}', [App\Http\Controllers\ReservasiController::class, 'downloadInvoicePublic'])->name('fe.invoice');
 Route::get('/reservasi-sukses/{id}', [App\Http\Controllers\ReservasiController::class, 'sukses'])->name('fe.reservasi-sukses');
+
+Route::post('/cek-diskon', [App\Http\Controllers\DiskonController::class, 'cek']);

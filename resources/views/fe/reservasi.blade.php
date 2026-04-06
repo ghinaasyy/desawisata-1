@@ -11,24 +11,30 @@
             color: #1b3c2c;
             background: none;
         }
+
         .reservasi-summary-title {
             color: #1b3c2c;
         }
+
         .reservasi-btn {
             background: #f7c873;
             color: #1b3c2c;
             border: none;
         }
+
         .reservasi-btn:hover {
             background: #e9f5ee;
             color: #1b3c2c;
         }
+
         .reservasi-card {
             background: #fff;
         }
+
         .reservasi-summary-card {
             background: #e9f5ee;
         }
+
         /* Sticky summary: avoid navbar/footer overlap */
         @media (min-width: 992px) {
             .sticky-summary {
@@ -38,12 +44,14 @@
                 margin-bottom: 40px;
             }
         }
+
         @media (max-width: 991px) {
             .sticky-summary {
                 position: static;
                 margin-bottom: 20px;
             }
         }
+
         /* Prevent overlap with footer */
         footer {
             z-index: 1;
@@ -87,9 +95,9 @@
                                     <select name="id_paket" id="id_paket" class="form-select form-select-lg @error('id_paket') is-invalid @enderror" required>
                                         <option value="">-- Pilih Paket --</option>
                                         @foreach ($paket as $p)
-                                            <option value="{{ $p->id }}" data-harga="{{ $p->harga_per_pack }}" {{ old('id_paket') == $p->id ? 'selected' : '' }}>
-                                                {{ $p->nama_paket }} - Rp {{ number_format($p->harga_per_pack, 0, ',', '.') }} /orang
-                                            </option>
+                                        <option value="{{ $p->id }}" data-harga="{{ $p->harga_per_pack }}" {{ old('id_paket') == $p->id ? 'selected' : '' }}>
+                                            {{ $p->nama_paket }} - Rp {{ number_format($p->harga_per_pack, 0, ',', '.') }} /orang
+                                        </option>
                                         @endforeach
                                     </select>
                                     @error('id_paket')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -119,6 +127,16 @@
                         <input type="hidden" name="diskon" id="diskon_input" value="0">
                         <input type="hidden" name="nilai_diskon" id="nilai_diskon_input" value="0">
                         <div class="d-grid mt-4">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Kode Diskon</label>
+                                <div class="input-group">
+                                    <input type="text" id="kode_diskon" class="form-control">
+                                    <button type="button" id="btnCekDiskon" class="btn btn-success">Cek</button>
+                                </div>
+                                <small id="infoDiskon" class="text-success"></small>
+                            </div>
+
                             <button type="submit" class="btn reservasi-btn btn-lg fw-bold shadow-sm">
                                 <i class="bi bi-check2-circle me-1"></i> Buat Reservasi
                             </button>
@@ -161,6 +179,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
         const paketSelect = document.getElementById('id_paket');
         const jumlahInput = document.getElementById('jumlah_peserta');
         const hargaPerOrangEl = document.getElementById('harga_per_orang');
@@ -169,31 +188,79 @@
         const summaryTotalEl = document.getElementById('summary_total');
         const hargaInput = document.getElementById('harga_input');
 
+        let diskonValue = 0;
+        let kodeDiskon = '';
+
         function formatRupiah(value) {
             return 'Rp ' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
         function updateSummary() {
             const opt = paketSelect.options[paketSelect.selectedIndex];
-            const hargaPerOrang = opt ? parseInt(opt.dataset.harga || 0, 10) : 0;
-            const jumlah = parseInt(jumlahInput.value || 0, 10) || 0;
+            const hargaPerOrang = opt ? parseInt(opt.dataset.harga || 0) : 0;
+            const jumlah = parseInt(jumlahInput.value || 0);
+
             const total = hargaPerOrang * jumlah;
+            const finalTotal = total - diskonValue;
 
             hargaPerOrangEl.textContent = hargaPerOrang ? formatRupiah(hargaPerOrang) : '-';
             summaryJumlahEl.textContent = jumlah;
-            summaryDiskonEl.textContent = '0';
-            summaryTotalEl.textContent = total ? formatRupiah(total) : '-';
+            summaryDiskonEl.textContent = formatRupiah(diskonValue);
+            summaryTotalEl.textContent = finalTotal > 0 ? formatRupiah(finalTotal) : 'Rp 0';
 
-            // set hidden inputs
+            // hidden input
             hargaInput.value = hargaPerOrang;
-            document.getElementById('diskon_input').value = 0;
-            document.getElementById('nilai_diskon_input').value = 0;
+            document.getElementById('diskon_input').value = kodeDiskon;
+            document.getElementById('nilai_diskon_input').value = diskonValue;
         }
 
-        paketSelect && paketSelect.addEventListener('change', updateSummary);
-        jumlahInput && jumlahInput.addEventListener('input', updateSummary);
+        paketSelect.addEventListener('change', () => {
+            diskonValue = 0;
+            kodeDiskon = '';
+            document.getElementById('infoDiskon').innerText = '';
+            updateSummary();
+        });
 
-        // initial run
+        jumlahInput.addEventListener('input', () => {
+            diskonValue = 0;
+            kodeDiskon = '';
+            document.getElementById('infoDiskon').innerText = '';
+            updateSummary();
+        });
+
+        document.getElementById('btnCekDiskon').addEventListener('click', function() {
+            const kode = document.getElementById('kode_diskon').value;
+            const total = parseInt(hargaInput.value) * parseInt(jumlahInput.value);
+
+            fetch('/cek-diskon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        kode: kode,
+                        total: total
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status) {
+                        diskonValue = data.nilai_diskon;
+                        kodeDiskon = data.kode;
+
+                        document.getElementById('infoDiskon').innerText = '✅ Diskon berhasil digunakan';
+                    } else {
+                        diskonValue = 0;
+                        kodeDiskon = '';
+                        document.getElementById('infoDiskon').innerText = '';
+                        alert(data.message);
+                    }
+
+                    updateSummary();
+                });
+        });
+
         updateSummary();
     });
 </script>

@@ -1,4 +1,3 @@
-
 <!-- page yang nunjukin hasil per reservasi -->
 
 @extends('fe.master')
@@ -53,7 +52,9 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="small text-muted">Tanggal Reservasi</div>
-                            <div class="fw-bold">{{ \Illuminate\Support\Carbon::parse($reservasi->tgl_reservasi_wisata)->translatedFormat('d M Y') }}</div>
+                            <div class="fw-bold">
+                                {{ \Illuminate\Support\Carbon::parse($reservasi->tgl_reservasi_wisata)->translatedFormat('d M Y') }}
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <div class="small text-muted">Jumlah Peserta</div>
@@ -61,13 +62,19 @@
                         </div>
                         <div class="col-md-4">
                             <div class="small text-muted">Harga per Paket</div>
-                            <div class="fw-bold">Rp {{ number_format($reservasi->harga,0,',','.') }}</div>
+                            <div class="fw-bold">
+                                Rp {{ number_format((float)($reservasi->harga ?? 0), 0, ',', '.') }}
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-4 d-flex gap-2">
                         <a href="{{ url('/') }}" class="btn btn-outline-secondary">Kembali ke Beranda</a>
-                        @php $invoiceUrl = \Illuminate\Support\Facades\Route::has('reservasi.invoice') ? route('reservasi.invoice', $reservasi->id) : route('fe.invoice', $reservasi->id); @endphp
+                        @php 
+                            $invoiceUrl = \Illuminate\Support\Facades\Route::has('reservasi.invoice') 
+                                ? route('reservasi.invoice', $reservasi->id) 
+                                : route('fe.invoice', $reservasi->id); 
+                        @endphp
                         <a href="{{ $invoiceUrl }}" class="btn btn-primary">Lihat / Unduh Invoice</a>
                         @if($reservasi->file_bukti_tf)
                             <a href="{{ asset('storage/' . $reservasi->file_bukti_tf) }}" target="_blank" class="btn btn-outline-info">Lihat Bukti TF</a>
@@ -81,11 +88,33 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Ringkasan</h5>
-                    <div class="d-flex justify-content-between mb-2"><div class="text-muted">Harga</div><div>Rp {{ number_format($reservasi->harga,0,',','.') }}</div></div>
-                    <div class="d-flex justify-content-between mb-2"><div class="text-muted">Jumlah</div><div>{{ $reservasi->jumlah_peserta }}</div></div>
-                    <div class="d-flex justify-content-between mb-2"><div class="text-muted">Diskon</div><div>{{ $reservasi->diskon }} %</div></div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="text-muted">Harga</div>
+                        <div>Rp {{ number_format((float)($reservasi->harga ?? 0), 0, ',', '.') }}</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="text-muted">Jumlah</div>
+                        <div>{{ $reservasi->jumlah_peserta }}</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="text-muted">Diskon</div>
+                        <div>
+                            Rp {{ number_format((float)($reservasi->nilai_diskon ?? 0), 0, ',', '.') }}
+                        </div>
+                    </div>
+
                     <hr>
-                    <div class="d-flex justify-content-between"><div class="fw-bold">Total Bayar</div><div class="fw-bold">Rp {{ number_format($reservasi->total_bayar,0,',','.') }}</div></div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">Total Bayar</div>
+                        <div class="fw-bold">
+                            Rp {{ number_format((float)($reservasi->total_bayar ?? 0), 0, ',', '.') }}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

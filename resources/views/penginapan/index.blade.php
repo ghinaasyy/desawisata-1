@@ -1,3 +1,7 @@
+@php
+use Illuminate\Support\Str;
+@endphp
+
 @extends('be.master')
 @section('navbar')
 @include('be.navbar')

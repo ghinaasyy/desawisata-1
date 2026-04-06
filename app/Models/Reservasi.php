@@ -27,8 +27,9 @@ class Reservasi extends Model
     // Casting tipe data
     protected $casts = [
         'tgl_reservasi_wisata' => 'datetime',
-        'diskon' => 'decimal:0',
-        'nilai_diskon' => 'float',
+        'harga' => 'decimal:2',
+        'nilai_diskon' => 'decimal:2',
+        'total_bayar' => 'decimal:2',
     ];
 
     public function pelanggan()
@@ -40,5 +41,4 @@ class Reservasi extends Model
     {
         return $this->belongsTo(PaketWisata::class, 'id_paket');
     }
-
 }

@@ -74,7 +74,7 @@ class VoucherController extends Controller
     public function update(Request $request, Diskon $voucher)
     {
         $validated = $request->validate([
-            'kode' => 'required|max:50|unique:diskons,kode,'.$voucher->id,
+            'kode' => 'required|max:50|unique:diskons,kode,' . $voucher->id,
             'nama_promo' => 'required|max:255',
             'detail_promo' => 'nullable|string',
             'nilai_diskon' => 'required|numeric|min:0',
@@ -108,6 +108,14 @@ class VoucherController extends Controller
         }
 
         return redirect()->route('voucher.index')->with('success', 'Voucher berhasil diperbarui!');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Diskon $voucher)
+    {
+        return view('voucher.edit', compact('voucher'));
     }
 
     /**
@@ -152,7 +160,7 @@ class VoucherController extends Controller
         }
 
         if ($request->total_transaksi < $voucher->minimal_transaksi) {
-            return back()->with('error', 'Minimal transaksi Rp '.number_format($voucher->minimal_transaksi, 0, ',', '.'));
+            return back()->with('error', 'Minimal transaksi Rp ' . number_format($voucher->minimal_transaksi, 0, ',', '.'));
         }
 
         // Hitung diskon
@@ -175,6 +183,6 @@ class VoucherController extends Controller
             ]
         ]);
 
-        return back()->with('success', 'Voucher berhasil digunakan. Diskon: Rp '.number_format($diskon, 0, ',', '.'));
+        return back()->with('success', 'Voucher berhasil digunakan. Diskon: Rp ' . number_format($diskon, 0, ',', '.'));
     }
 }

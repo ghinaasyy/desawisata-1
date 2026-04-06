@@ -4,133 +4,51 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Diskon;
-use App\Models\Pelanggan;
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DiskonController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function cek(Request $request)
     {
-        $diskons = Diskon::where('tanggal_berakhir', '>=', now())
-            ->whereColumn('digunakan', '<', 'kuota')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $kode = $request->kode;
+        $total = $request->total;
 
-        return view('fe.diskon', compact('diskons'));
-    }
+        $diskon = Diskon::where('kode', $kode)->first();
 
-    public function claim(Request $request, $id)
-    {
-        // Validate user is authenticated
-        if (!Auth::check()) {
-            return $this->jsonError('Anda harus login terlebih dahulu');
+        if (!$diskon) {
+            return response()->json(['status' => false, 'message' => 'Kode tidak ditemukan']);
         }
 
-        // Get or create pelanggan
-        $pelanggan = $this->getOrCreatePelanggan(Auth::user());
-        if (!$pelanggan) {
-            return $this->jsonError('Gagal membuat data pelanggan');
+        $today = Carbon::today();
+
+        if ($today < $diskon->tanggal_mulai || $today > $diskon->tanggal_berakhir) {
+            return response()->json(['status' => false, 'message' => 'Diskon tidak berlaku']);
         }
 
-        // Process voucher claim
-        return $this->processVoucherClaim($pelanggan, $id);
-    }
-
-    protected function getOrCreatePelanggan($user)
-    {
-        if ($user->pelanggan) {
-            return $user->pelanggan;
-        }
-
-        return Pelanggan::create([
-            'id_user' => $user->id,
-            'nama_lengkap' => $user->name,
-            'no_hp' => '-',
-            'alamat' => '-',
-            'foto' => null,
-            'voucher_claimed' => json_encode([])
-        ]);
-    }
-
-    protected function processVoucherClaim($pelanggan, $voucherId)
-    {
-        try {
-            $diskon = Diskon::findOrFail($voucherId);
-
-            // Validate voucher
-            $validation = $this->validateVoucher($diskon, $pelanggan);
-            if ($validation !== true) {
-                return $validation;
-            }
-
-            // Record voucher claim
-            $this->recordVoucherClaim($pelanggan, $diskon);
-
-            return $this->jsonSuccess('Voucher berhasil diklaim!');
-
-        } catch (\Exception $e) {
-            return $this->jsonError('Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-
-    protected function validateVoucher($diskon, $pelanggan)
-    {
-        if ($diskon->tanggal_berakhir < now()) {
-            return $this->jsonError('Voucher sudah kadaluarsa');
+        if ($total < $diskon->minimal_transaksi) {
+            return response()->json(['status' => false, 'message' => 'Minimal transaksi belum terpenuhi']);
         }
 
         if ($diskon->digunakan >= $diskon->kuota) {
-            return $this->jsonError('Kuota voucher sudah habis');
+            return response()->json(['status' => false, 'message' => 'Kuota habis']);
         }
 
-        if ($this->hasClaimedVoucher($pelanggan, $diskon->id)) {
-            return $this->jsonError('Anda sudah mengklaim voucher ini');
+        // hitung diskon
+        if ($diskon->jenis_diskon == 'persentase') {
+            $nilai = ($diskon->nilai_diskon / 100) * $total;
+        } else {
+            $nilai = $diskon->nilai_diskon;
         }
 
-        return true;
-    }
+        // maksimal diskon
+        if ($diskon->maksimal_diskon && $nilai > $diskon->maksimal_diskon) {
+            $nilai = $diskon->maksimal_diskon;
+        }
 
-    protected function hasClaimedVoucher($pelanggan, $voucherId)
-    {
-        $claimedVouchers = json_decode($pelanggan->voucher_claimed ?? '[]', true);
-        
-        return collect($claimedVouchers)
-            ->contains('diskon_id', $voucherId);
-    }
-
-    protected function recordVoucherClaim($pelanggan, $diskon)
-    {
-        $claimedVouchers = json_decode($pelanggan->voucher_claimed ?? '[]', true);
-        
-        $claimedVouchers[] = [
-            'diskon_id' => $diskon->id,
-            'claimed_at' => now()->toDateTimeString(),
-            'used' => false
-        ];
-
-        $pelanggan->update([
-            'voucher_claimed' => json_encode($claimedVouchers)
-        ]);
-
-        $diskon->increment('digunakan');
-    }
-
-    protected function jsonSuccess($message)
-    {
         return response()->json([
-            'success' => true,
-            'message' => $message
+            'status' => true,
+            'nilai_diskon' => $nilai,
+            'kode' => $diskon->kode
         ]);
-    }
-
-    protected function jsonError($message)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 400);
     }
 }
