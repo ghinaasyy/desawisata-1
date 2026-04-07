@@ -188,6 +188,7 @@ class ReservasiController extends Controller
 
         $reservasis = Reservasi::with('paketWisata')
             ->where('id_pelanggan', Auth::user()->pelanggan->id)
+            ->where('status_reservasi_wisata', '!=', 'selesai') // ini
             ->orderBy('created_at', 'desc')
             ->get();
 
